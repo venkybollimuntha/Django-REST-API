@@ -1,0 +1,41 @@
+dumpdata -- it will directly give the database data of given table
+
+1. py manage.py dumpdata testapp.Employee
+
+2. py manage.py dumpdata testapp.Employee --indent 4
+
+3. py manage.py dumpdata restapp.Employee --format json/xml --indent 4
+
+4. py manage.py dumpdata testapp.Employee --format json/xml>emp.xml --indent 4
+
+{% csrf_token %} [ONLY for DEV environment]
+-----------------------------------------
+How to ignore csrf_token 
+
+1. Method Level
+2. Class Level
+3. Project Level
+
+
+Method Level:
+-------------
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def my_view(request):
+    ......
+    pass
+
+Class Level:
+------------
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
+@method_decorator(csrf_excempt,name='dispatch') (note: dispatch means for all kinds of requests)
+class EmployeeListCBV(View):
+
+
+Project Level:
+--------------
+
+Goto project settings--> middleware --> remove CsrfViewMiddlware import.
