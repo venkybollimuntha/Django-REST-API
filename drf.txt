@@ -1,0 +1,639 @@
+serialization
+deserialization
+validations
+
+1.serialization:
+-----------------
+
+the process of converting complex data types (model instance, qs) into python native data types is called serialization. the advantagae is convert to json is very easy.
+
+
+
+Django serializers will work very similar to forms and Model forms
+
+
+
+emp = Employee.obects.get(id=1)
+
+eserializer = EmployeeSerializer(emp)
+
+eserializer.data # python native data type (dict)
+
+To convert dict to json:
+----------------------
+from rest_framework.renderers import JSONRenderer
+
+json_data = JSONRenderer().render(eserializer.data)
+
+
+
+How to serialize queryset:
+--------------------------
+qs = Employee.objects.all()
+
+eseralizer = EmployeeSerializer(qs,many=True)
+eseralizer.data
+
+
+
+
+2. deserialization:
+--------------------
+The process of converting python native data types into database supported complex types is called deserialization.
+
+
+converting json data to python native data type:
+---------------------------------------------
+
+import io
+from rest_framewrok.parsers import JSONParser
+stream = io.BytesIO(json_data)
+pdata = JSONParser().parse(stream)
+
+by deserialization we have to convert python data to db supported complex
+
+serializer = EmployeeSerializer(data=pdata)
+serializer.is_valid()
+
+serializer.validated_data
+
+
+
+
+Use case of Serialization and deserialization:
+-------------------------------------------
+
+1. partner application wants all employees records in json format
+
+qs --> python native data type (serialization)
+python native data type --> json data (JSONRenderer().render())
+
+
+2. partner application sending json data to create a new employee
+
+json data ---> python native data (JSONParser().parser())
+
+python native data type ---> database supported complex form (deserialization )
+
+
+
+
+3. validations by using serializers:
+-----------------------------------
+
+1. Field level validation
+2. Object level validation
+3. By using validatiors
+
+
+1. Field level validation:
+--------------------------
+esal minimum 5000
+def validate_esal(self,value):
+	if value < 5000:
+	serializers.ValidationError("emp salary should greater than 5000")
+
+
+
+2. object level validation:
+---------------------------
+
+if ename is sunny then cumpulsory esal shouldbe greater than 50,000
+def validate(self,data):
+	ename = data.get("ename")
+	esal = data.get("esal")
+	if ename.lower() == 'sunny':
+		raise serializers.validationError('salary should be greater than 5000 for sunny')
+
+
+
+3. By using validator attribute :
+-----------------------
+
+esal should be multiples fo 1000
+
+we can directly write a function and give that validation on serializer method
+
+
+execution priority:
+----------------------
+
+1. validation by validator attribute
+2. field level validation
+3. object level validation
+
+
+
+
+problems with Normal Serializers:
+--------------------------------
+
+1. We have to define all fields explicitly
+2. implement create() and update() methods explicitly.
+
+
+class EmployeeSerializer(serializers.ModelSerializer)
+	esal = serializers.FloatFiled(validators = [multiples_of_100])
+
+	class Meta:
+		model = Employee
+		fields = '__all__'
+		# if there are 1000 fields, if we want very less number of files
+
+		fileds = ['eno','ename','esal']
+
+		or 
+		exclude = ['esal']
+
+
+
+Django REST Framework Views:
+----------------------------
+
+DRF provides 2 classes to define business logic for our api views
+
+1. APIView
+2. ViewSet
+
+
+FBV: 
+1. (function Based Views) 
+2. (powerful) 
+3. (complete control)
+4. complex operations and clear execution flow
+
+eg: APIView
+
+
+APIView:
+--------
+View class
+It is child class of View
+get(),post(),put(),etc
+we have to write code explicitly... complete control over the logic.
+clear execution flow
+complex operations like working with multiple data sources.
+calling other 3rd party apis
+
+we have to map views to urls manually.
+
+
+
+ViewSet:
+--------
+list(), create(), retrieve(), update(),partial_update(), destroy()
+
+useful when we developing very simple APIs 
+
+Router concept, it will automatically map urls.
+
+
+
+APIView:
+--------
+1. present in rest_framework.views module
+2. method names reflect HTTP Methods like
+get(),post(),put(),patch(),delete()
+
+3. we have to map views to urls explicitly
+
+4. most of the business logic we have to write explicitly
+
+5. length of the code is more
+6. API development time is more
+7. Developer has complete control over the logic
+8. clear execution flow is possible
+9. Best suitable for complex operations like using multiple data sources simultaneously and calling other apis
+
+
+
+ViewSet:
+--------
+
+1. present in rest_framework.viewsets module
+2. method names reflect database model class actions/operations
+list(),create(),retrieve(),update(),partial_update(), destroy()
+3. we are not required to map urls explicitly, DefaultRouter 
+will take care 
+
+4. most of the business logic will be generated automatically.
+
+5. lenght of the code is less
+6. API development time is less
+7. developer won't has complete control over the logic.
+8. clear execution flow is not possible
+9. Best suitable for developing simple APIs like developing CRUD interface 
+
+
+
+APIView
+
+ListAPIView
+CreateAPIView
+
+ID is required for these following views
+--------------------
+RetrieveAPIView
+UpdateAPIView
+DestroyAPIView
+
+
+ListCreateAPIView
+RestrieveUpdateAPIView
+RetrieveDestroyAPIView
+RetrieveUpdateDestroyAPIView
+
+
+
+Mixins:
+-------
+
+normal classes meant for code reusability
+direct child classes of object
+contain only methods
+
+from rest_framework.mixins import *
+
+ListModelMixin
+CreateModleMixin
+RetrieveModelMixin
+UpdateModelMixin
+DestroyModelMixin
+
+
+1. ListModelMixin:
+------------------
+to implement list operations(get method handler)
+
+
+list(request,*args, **kwargs)
+
+
+2. CreateModelMixin:
+--------------------
+to implement create operation (post mehtod handler)
+
+create(request, *args,**kwargs)
+
+
+
+3. UpdateModelMixin:
+--------------------
+
+to implement update operation (put, patch)
+update(request, *args, **kwargs)
+partial_update(request, *args,**kwargs)
+
+
+4. RetrieveModelMixin:
+---------------------
+
+to implement retrieve operation (detail operation)
+
+retrieve(request, *args, **kwargs)
+
+
+5. DestroyModelMixin:
+---------------------
+
+
+
+
+Demo application for Viewsets based on Model
+
+
+
+
+Authentication and Authorization:
+
+1. Basic Authentication
+2. Session Authenitcation
+3. Token Authentication
+4. JWT (JSON Web Token) Authentication
+
+
+Permission-classes
+
+AllowAny
+IsAuthenticated
+IsAdminUser
+IsAuthenticatedOrReadOnly
+DjangoModelPermissions
+DjangoPermissionOrAnonReadOnly
+
+
+READ Operation: GET, HEAD, OPTIONS ==> safe methods
+WRITE Operation: POST, PUT, PATCH, DELETE
+
+
+
+Token Authentication:
+---------------------
+
+Authentication can be performed by some Token
+
+native destop clients, mobile clients
+
+authtoken ---> DRF
+authtoken is the inbuilt application provided by the DRF.
+
+
+1. include authtoken application in our installed applications
+
+2. Token table
+
+To implement TokenAuthentication, we have to use 3rd party application 'rest_framework.authtoke', which is responsible to generate and validate required tokens. this application is the part of DRF.
+
+
+
+configure url.py:
+----------------
+
+import authtoken class views and include those in urlpatterns
+
+
+http POST http://127.0.0.1:8000/get-api-token/ usernam="venky" password="venky123"
+
+procedure:
+----------
+
+1. authtoken application can validate this username and pwd
+
+2. authtoken application will check whether token already generated or not
+
+3. If token is already generated for this user, then existing token is sent
+
+4. If token is not generated, then a new token will be created and stored in token table and send token as the response.
+
+
+
+How to enable Authentication and Authorization (permission) for our view class:
+-------------------------------
+local approach (define in the class level)
+global approach (define in the settings.py level)
+
+
+Always local approach will override the global approach.
+
+
+sending in the header with Authorization: Token YOUR_TOKEN_HERE
+
+
+
+3. IsAdminUser:
+------------
+
+4. IsAuthenticatedOrReadOnly:
+----------------------------
+Read only operations: GET, HEAD, and OPTIONS
+
+Write operation: POST, PUT, PATCH, DELETE
+
+eg: IRCTC website, flipkart, bookmyshow
+
+5. DjangoModelPermissions:
+--------------------------
+
+ to access end point --> authentication must be required (Token)
+
+ GET --> authentication is enough, model permissions are not required.
+
+ POST, PATCH, DELETE --> authentication + model permissions , must be required 
+
+ POST --> add model permission
+ PUT, PATCH ---> change model permission
+ DELETE ---> delete model permission 
+
+ how to give model permissions:
+ -----------------------------
+ Login to admin panel as super admin, select the user to give permission, under permissions panel, choose the permissions and save.
+
+
+
+ 6. DjandoModelPermissionsOrReadOnly:
+ -----------------------------------
+ Authenticated user can perform all the operations based on the model permissions, 
+
+ But anonymous user can access GET request.
+
+
+
+ custom permissions model:
+ -------------------------
+
+it is to define our own permission classes
+
+class XYZPermission(BasePermission):
+	def has_permission(self,request,view):
+	
+
+
+JWT Authentication:
+-------------------
+
+1. access_token
+2. refresh token
+3. verify
+
+we need to import from this
+
+from rest_framework_jwt.views import
+		obtain_jwt_token,
+		refresh_jwt_token,
+		verify_jwt_token
+
+	path('auth-jwt/',obtain_jwt_token,name='auth-jwt-verifyoken'),
+    path('auth-jwt-refresh/',refresh_jwt_token,name='refresh_jwt_token'),
+    path('auth-jwt-verify/',verify_jwt_token,name='verify_jwt_token')
+
+To refresh the token you must need to add in settings.py
+
+JWT_AUTH = {
+	
+	'JWT_ALLOW_REFRESH': True,
+}
+
+
+
+Custom Authentication:
+------------------------
+
+1. Custom Authentication class by extending from BaseAuthentication
+
+2. you have to override the authenticate() method.
+
+3. Return tuple: (user, None)
+
+4. raise AuthenticationFailed exception
+
+
+
+Pagination DRF:
+---------------
+
+1. PageNumberPagination
+2. LimitOffsetPagination
+3. CursorPagination
+
+
+Enable pagination globally:
+---------------------------
+
+settings.py
+
+REST_FRAMEWORK = {
+	'DEFAULT_PAGINATION_CLASS':'rest_framewrok.pagination.pageNumberPagination'
+	'PAGE_SIZE': 10
+}
+
+
+
+Enable pagination Locally:
+---------------------------
+
+class EmployeeAPIView(generics.ListAPIView):
+	pagination_class = PageNumberPagination
+
+2. LimitOffsetPagination:
+-------------------------
+
+	default_limit = 15
+	limit_query_param = 'mylimit' # default value is limit
+	offset_query_param = "myoffset" # default value is offset
+	max_limit = 20
+
+3. CursorPagination:
+--------------------
+
+To get all records according to ascending order of employee salaries but per page 5
+
+
+DRF- Filtering:
+--------------
+Searching/Filtering and Ordering:
+--------------------------------
+
+eg: All the records where ename contains Jhon
+
+
+1. Plain Vanilla Filtering:
+2. By using DRF API
+
+
+1. Plain Vanilla Filtering:
+---------------------------
+
+By overriding get_queryset() method.
+
+http://localhost:8000/api/?ename=Jhon
+
+
+2. By using DRF API:
+--------------------
+you have to import rest_framework.filters import SearchFilter in settings.py 
+
+
+to query with fields
+
+1. search_fields = ('eno',) # any
+2. search_fields = ('^eno',) # starts with
+3. serac_fields = ('=eno',) # exactly match
+
+Ordering:
+----------
+if you want to add ordering as well to the searching, add Ordering Filter to the settings.py
+
+
+
+Nested Serializers:
+------------------
+
+Sometimes we can use one serializer inside another serializer 
+
+if you have many to many, many to one, one to one relationships you can happily use the nested serializers.
+
+
+
+BasicAuthentication:
+-------------------
+Limitation:
+------------
+1. we can't customize the form (basically its a alert prompt)
+
+2. username and password are sending to server using base64 encoded format which is not secure. any one can decode it anytime.
+
+
+SessionAuthentication:
+-----------------------
+
+auth application
+
+If we want to use session authentication we need to add some imports in the django urls
+
+path('accounts/',include('django.contrib.auth.urls'))
+
+and we need to have one templates folders, in that registration folder and login.html file
+
+Next thing, once the login is successfully authenticated, we are by default redirecting to accounts/profile. if we want to redirect to our own path, we have to define in settings.py file "LOGIN_REDIRECT_URL" = "OUR_CUSTOM_PATH".
+
+
+
+
+
+Consuming Third party API from our Django application:
+-----------------------------------
+
+
+
+
+Swagger:
+--------
+
+1. pip install django-rest-swagger
+
+2. we have to add 'rest_framework_swagger' to settings.py
+
+3. urls.py
+----------
+
+from rest_framework_swagger.views import get_swagger_view
+
+schema_view = get_swagger_view(title='Employee API Functionality testing using swagger')
+
+urlpatterns=[
+
+path('docs/',schema_view)
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
